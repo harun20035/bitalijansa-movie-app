@@ -216,6 +216,90 @@ body {
   background-clip: text;
 }
 
+/* New styles for movie cards and search functionality */
+.movie-poster {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+}
+
+.movie-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.grid-item:hover .movie-poster img {
+  transform: scale(1.05);
+}
+
+.item-title h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+}
+
+.item-title .year {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.item-title .rating {
+  margin: 0;
+  font-size: 14px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Search functionality styles */
+.search-loading {
+  margin-top: 10px;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.search-results-header,
+.top-rated-header {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.search-results-header h2,
+.top-rated-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.search-results-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 18px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #666;
+  grid-column: 1 / -1;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .app {

@@ -1,14 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
+import { MovieProvider, useMovieContext } from './context/MovieContext';
+import { useDebounce } from './hooks/useDebounce';
+import MovieCard from './components/MovieCard';
+import { Movie, TVShow } from './types';
 
-type TabType = 'movies' | 'tv-shows';
+const AppContent: React.FC = () => {
+  const {
+    activeTab,
+    movies,
+    tvShows,
+    searchQuery,
+    searchResults,
+    isLoading,
+    isSearching,
+    setActiveTab,
+    setSearchQuery,
+    clearSearch,
+    searchContent,
+  } = useMovieContext();
 
-function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('tv-shows');
+  const debouncedSearchQuery = useDebounce(searchQuery, 1000);
 
-  const handleTabChange = (tab: TabType) => {
+  // Handle debounced search
+  useEffect(() => {
+    if (debouncedSearchQuery.length >= 3) {
+      searchContent(debouncedSearchQuery);
+    } else {
+      clearSearch();
+    }
+  }, [debouncedSearchQuery, activeTab]);
+
+  const handleTabChange = (tab: 'movies' | 'tv-shows') => {
     setActiveTab(tab);
+    // If we're searching, trigger search for the new tab
+    if (searchQuery.length >= 3) {
+      searchContent(searchQuery);
+    }
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleItemClick = (item: Movie | TVShow) => {
+    // TODO: Navigate to detail view
+    console.log('Clicked item:', item);
+  };
+
+  // Determine what to display
+  const displayItems = searchQuery.length >= 3 ? searchResults : (activeTab === 'movies' ? movies : tvShows);
+  const isShowingSearchResults = searchQuery.length >= 3;
 
   return (
     <div className="app">
@@ -38,25 +80,61 @@ function App() {
             type="text" 
             placeholder="Search" 
             className="search-input"
+            value={searchQuery}
+            onChange={handleSearchChange}
           />
         </div>
+        {isSearching && <div className="search-loading">Searching...</div>}
       </div>
 
       <main className="content">
-        <div className="grid">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className="grid-item">
-              <div className="placeholder-image">
-                <div className="cross">✕</div>
+        {isLoading ? (
+          <div className="loading">Loading...</div>
+        ) : (
+          <>
+            {isShowingSearchResults && (
+              <div className="search-results-header">
+                <h2>Search Results for "{searchQuery}"</h2>
+                <p>Found {displayItems.length} results</p>
               </div>
-              <div className="item-title">
-                {activeTab === 'movies' ? 'Movie Title' : 'TV Title'}
+            )}
+            
+            {!isShowingSearchResults && (
+              <div className="top-rated-header">
+                <h2>Top 10 {activeTab === 'movies' ? 'Movies' : 'TV Shows'}</h2>
               </div>
+            )}
+
+            <div className="grid">
+              {displayItems.length > 0 ? (
+                displayItems.map((item) => (
+                  <MovieCard
+                    key={item.id}
+                    item={item}
+                    onClick={() => handleItemClick(item)}
+                  />
+                ))
+              ) : (
+                <div className="no-results">
+                  {isShowingSearchResults 
+                    ? `No results found for "${searchQuery}"`
+                    : `No ${activeTab === 'movies' ? 'movies' : 'TV shows'} available`
+                  }
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </main>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <MovieProvider>
+      <AppContent />
+    </MovieProvider>
   );
 }
 
