@@ -11,6 +11,43 @@ const api = axios.create({
   },
 });
 
+export const tvAPI = {
+  // Get top rated TV shows
+  getTopRated: async (): Promise<TVShow[]> => {
+    try {
+      const response = await api.get<TMDBResponse<TVShow>>('/tv/top_rated');
+      return response.data.results.slice(0, 10); // Return only top 10
+    } catch (error) {
+      console.error('Error fetching top rated TV shows:', error);
+      throw error;
+    }
+  },
+
+  // Search TV shows
+  searchTVShows: async (query: string): Promise<TVShow[]> => {
+    try {
+      const response = await api.get<TMDBResponse<TVShow>>('/search/tv', {
+        params: { query },
+      });
+      return response.data.results;
+    } catch (error) {
+      console.error('Error searching TV shows:', error);
+      throw error;
+    }
+  },
+
+  // Get TV show details
+  getTVShowDetails: async (id: number): Promise<TVShow> => {
+    try {
+      const response = await api.get<TVShow>(`/tv/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching TV show details:', error);
+      throw error;
+    }
+  },
+};
+
 export const movieAPI = {
   // Get top rated movies
   getTopRated: async (): Promise<Movie[]> => {
@@ -35,29 +72,14 @@ export const movieAPI = {
       throw error;
     }
   },
-};
 
-export const tvAPI = {
-  // Get top rated TV shows
-  getTopRated: async (): Promise<TVShow[]> => {
+  // Get movie details
+  getMovieDetails: async (id: number): Promise<Movie> => {
     try {
-      const response = await api.get<TMDBResponse<TVShow>>('/tv/top_rated');
-      return response.data.results.slice(0, 10); // Return only top 10
+      const response = await api.get<Movie>(`/movie/${id}`);
+      return response.data;
     } catch (error) {
-      console.error('Error fetching top rated TV shows:', error);
-      throw error;
-    }
-  },
-
-  // Search TV shows
-  searchTVShows: async (query: string): Promise<TVShow[]> => {
-    try {
-      const response = await api.get<TMDBResponse<TVShow>>('/search/tv', {
-        params: { query },
-      });
-      return response.data.results;
-    } catch (error) {
-      console.error('Error searching TV shows:', error);
+      console.error('Error fetching movie details:', error);
       throw error;
     }
   },

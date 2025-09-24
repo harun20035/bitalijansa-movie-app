@@ -1,26 +1,77 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './App.css';
-import { MovieProvider, useMovieContext } from './context/MovieContext';
+import { useMovieStore } from './store/movieStore';
 import { useDebounce } from './hooks/useDebounce';
 import MovieCard from './components/MovieCard';
 import { Movie, TVShow } from './types';
+import { movieAPI, tvAPI } from './services/api';
 
 const AppContent: React.FC = () => {
+  const navigate = useNavigate();
   const {
     activeTab,
-    movies,
-    tvShows,
     searchQuery,
     searchResults,
+    topRatedMovies,
+    topRatedTVShows,
     isLoading,
     isSearching,
     setActiveTab,
     setSearchQuery,
+    setSearchResults,
+    setTopRatedMovies,
+    setTopRatedTVShows,
+    setIsLoading,
+    setIsSearching,
     clearSearch,
-    searchContent,
-  } = useMovieContext();
+    navigateToDetail,
+  } = useMovieStore();
 
   const debouncedSearchQuery = useDebounce(searchQuery, 1000);
+
+  // Fetch top rated content when tab changes
+  const fetchTopRated = async () => {
+    setIsLoading(true);
+    try {
+      if (activeTab === 'movies') {
+        const topMovies = await movieAPI.getTopRated();
+        setTopRatedMovies(topMovies);
+      } else {
+        const topTVShows = await tvAPI.getTopRated();
+        setTopRatedTVShows(topTVShows);
+      }
+    } catch (error) {
+      console.error('Error fetching top rated content:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Search content
+  const searchContent = async (query: string) => {
+    if (query.length < 3) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      if (activeTab === 'movies') {
+        const results = await movieAPI.searchMovies(query);
+        setSearchResults(results);
+      } else {
+        const results = await tvAPI.searchTVShows(query);
+        setSearchResults(results);
+      }
+    } catch (error) {
+      console.error('Error searching content:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Handle debounced search
   useEffect(() => {
@@ -30,6 +81,11 @@ const AppContent: React.FC = () => {
       clearSearch();
     }
   }, [debouncedSearchQuery, activeTab]);
+
+  // Fetch top rated content when tab changes
+  useEffect(() => {
+    fetchTopRated();
+  }, [activeTab]);
 
   const handleTabChange = (tab: 'movies' | 'tv-shows') => {
     setActiveTab(tab);
@@ -44,12 +100,13 @@ const AppContent: React.FC = () => {
   };
 
   const handleItemClick = (item: Movie | TVShow) => {
-    // TODO: Navigate to detail view
-    console.log('Clicked item:', item);
+    navigateToDetail();
+    const type = 'title' in item ? 'movie' : 'tv';
+    navigate(`/${type}/${item.id}`);
   };
 
   // Determine what to display
-  const displayItems = searchQuery.length >= 3 ? searchResults : (activeTab === 'movies' ? movies : tvShows);
+  const displayItems = searchQuery.length >= 3 ? searchResults : (activeTab === 'movies' ? topRatedMovies : topRatedTVShows);
   const isShowingSearchResults = searchQuery.length >= 3;
 
   return (
@@ -131,11 +188,7 @@ const AppContent: React.FC = () => {
 };
 
 function App() {
-  return (
-    <MovieProvider>
-      <AppContent />
-    </MovieProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;
